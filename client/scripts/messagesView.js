@@ -6,24 +6,23 @@ var MessagesView = {
   initialize: function() {
   },
 
-  render: function() {
-    //Messages object
-    /*objectID
-      username
-      text
-      roomname
-      createdAt
-       updatedAt*/
-    this.$chats.empty();
-    Messages.forEach(msg => {
-      var {username, text, roomname, createdAt} = msg;
-
+  renderMessage: function(msg){
+    var {username, text, roomname, createdAt} = msg;
       if (roomname === App.roomname) {
-        username = this.checkXSS(username);
+        if (username === undefined) {
+          return;
+        }
+        text = (!text) ? '' : text;
         text = this.checkXSS(text);
+        username = this.checkXSS(username);
         this.$chats.append(this.messageTemplate({username:username, text:text, createdAt:createdAt}));
       }
-    });
+  },
+
+  render: function() {
+    this.$chats.empty();
+    Messages.storage.forEach(msg => this.renderMessage(msg));
+    $('.username').on('click', Friends.toggleStatus);
   },
 
   checkXSS(text){

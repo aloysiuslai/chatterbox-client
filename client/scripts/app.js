@@ -13,31 +13,37 @@ var App = {
     MessagesView.initialize();
 
     // Fetch initial batch of messages
-    App.fetch();
+    App.fetch(() => {
+      RoomsView.render();
+      MessagesView.render();
+      App.roomname = Rooms.storage[0];
+    });
 
+  },
+
+  send: function(message) {
+    App.startSpinner();
+    Parse.create(message, () => App.fetch(x => MessagesView.render()));
+    App.stopSpinner();
   },
 
   fetch: function(callback = ()=>{}) {
     App.startSpinner();
     Parse.readAll((data) => {
-      // examine the response from the server request:
-      // could data be undefined????
       if (data !== undefined) {
         if (Array.isArray(data.results)) {
 
-          Messages = data.results; // an array of messages of 100, ordered from most recent at top
-          Rooms = []; //_.uniq(Messages.forEach(msg => msg.roomname));
-          for (var i=0; i<Messages.length; i++) {
-            var roomname = Messages[i].roomname;
+          Messages.storage = data.results; // an array of messages of 100, ordered from most recent at top
+          Rooms.storage = []; //_.uniq(Messages.forEach(msg => msg.roomname));
+          for (var i=0; i<Messages.storage.length; i++) {
+            var roomname = Messages.storage[i].roomname;
             if (roomname !== "" && roomname !== undefined  && roomname !== null) {
-              Rooms.push(roomname);
+              Rooms.storage.push(roomname);
             }
           }
-          Rooms = _.uniq(Rooms);
-          RoomsView.render();
-          MessagesView.render();
-          console.log('fetched data successfully');
+          Rooms.storage = _.uniq(Rooms.storage);
           callback();
+          console.log('fetched data successfully');
         }
       }
       App.stopSpinner()
